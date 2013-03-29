@@ -11,14 +11,7 @@ import re
 
 class Extractor(object):
 
-    rawPage = ''
-    text = ''
-    isGB = True
-    textLines = []
-    blocksLen = []
-    isCharsetGB = True
-
-    def __init__(self, url, blockSize=3):
+    def __init__(self, url='', blockSize=3):
         self.url = url
         self.blockSize = blockSize
 
@@ -40,6 +33,14 @@ class Extractor(object):
         self.reWrap = re.compile('\r\n|\r')
         # Reduce redundancy
         self.reRedun = re.compile('\n{%s,}' % (self.blockSize+1))
+
+    def reset(self):
+        self.rawPage = ''
+        self.text = ''
+        self.isGB = True
+        self.textLines = []
+        self.blocksLen = []
+        self.isCharsetGB = True
 
     def getRawPage(self):
         self.rawPage = urllib2.urlopen(self.url).read()
@@ -89,10 +90,15 @@ class Extractor(object):
             self.blocksLen.append(blockLen)
 
     # Merge the most possibile blocks as the final plaintext
-    def getPlainText(self):
+    def getPlainText(self, url=''):
+        self.reset()
+        if url:
+            self.url = url
         self.getRawPage()
         self.handleEncoding()
         preProcDoc = self.preProcess(self.rawPage)
+        # f = open('dump')
+        # preProcDoc = f.read()
         self.getTextLines(preProcDoc)
         self.calcBlockLens()
 
