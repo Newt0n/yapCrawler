@@ -35,6 +35,7 @@ class Extractor(object):
         self.reRedun = re.compile('\n{%s,}' % (self.blockSize+1))
 
     def reset(self):
+        self.url = ''
         self.rawPage = ''
         self.text = ''
         self.isGB = True
@@ -42,8 +43,15 @@ class Extractor(object):
         self.blocksLen = []
         self.isCharsetGB = True
 
-    def getRawPage(self):
-        self.rawPage = urllib2.urlopen(self.url).read()
+    def getRawPage(self, sourceType):
+        if sourceType == 'url':
+            self.rawPage = urllib2.urlopen(self.url).read()
+        elif sourceType == 'path':
+            f = open(self.url)
+            self.rawPage = f.read()
+            f.close()
+        elif sourceType == 'text':
+            self.rawPage = self.url
 
     def handleEncoding(self):
         match = re.search('charset\s*=\s*"?([\w\d-]*)"?', self.rawPage, re.I)
@@ -90,11 +98,10 @@ class Extractor(object):
             self.blocksLen.append(blockLen)
 
     # Merge the most possibile blocks as the final plaintext
-    def getPlainText(self, url=''):
+    def getPlainText(self, data='', sourceType='url'):
         self.reset()
-        if url:
-            self.url = url
-        self.getRawPage()
+        self.url = data
+        self.getRawPage(sourceType)
         self.handleEncoding()
         preProcDoc = self.preProcess(self.rawPage)
         # f = open('dump')
@@ -120,7 +127,10 @@ class Extractor(object):
             i += 1
 
         if self.isCharsetGB:
-            self.text = self.text.decode('gb2312').encode('utf-8')
+            try:
+                self.text = self.text.decode('gb2312').encode('utf-8')
+            except Exception:
+                pass
         return self.text
 
 
@@ -129,7 +139,7 @@ if __name__ == '__main__':
     if len(args) <= 1:
         print 'Usage: extractor.py [url]'
     else:
-        ext = Extractor(args[1])
+        ext = Extractor()
         f = open('plain.txt', 'w')
-        f.write(ext.getPlainText())
+        f.write(ext.getPlainText(args[1]))
         f.close
