@@ -137,9 +137,12 @@ class Extractor(object):
 if __name__ == '__main__':
     args = sys.argv
     if len(args) <= 1:
-        print 'Usage: extractor.py [url]'
+        print 'Usage: extractor.py [url] [[filename]]'
     else:
         ext = Extractor()
-        f = open('plain.txt', 'w')
+        filename = 'plain.txt'
+        if len(args) >= 3:
+            filename = args[2]
+        f = open(filename, 'w')
         f.write(ext.getPlainText(args[1]))
         f.close
